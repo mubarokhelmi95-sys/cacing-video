@@ -33,7 +33,7 @@ jobs:
           pattern: frames-*
           path: frames
           merge-multiple: true
-      - run: sudo apt-get install -y ffmpeg && sh make_video.sh frames
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg && sh make_video.sh frames
       - uses: actions/upload-artifact@v4
         with:
           name: video_cacing
