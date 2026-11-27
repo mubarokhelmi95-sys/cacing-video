@@ -1,0 +1,40 @@
+name: Render video
+on: workflow_dispatch
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install playwright && playwright install --with-deps chromium
+      - name: Render shard
+        run: |
+          S=$(( ${{ matrix.shard }} * 141 ))
+          E=$(( S + 141 ))
+          if [ $E -gt 1122 ]; then E=1122; fi
+          python render.py $S $E frames
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frames-${{ matrix.shard }}
+          path: frames
+  video:
+    needs: render
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: frames-*
+          path: frames
+          merge-multiple: true
+      - run: sudo apt-get install -y ffmpeg && sh make_video.sh frames
+      - uses: actions/upload-artifact@v4
+        with:
+          name: video_cacing
+          path: video_cacing.mp4
